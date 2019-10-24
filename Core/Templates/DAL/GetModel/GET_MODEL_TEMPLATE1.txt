@@ -6,8 +6,8 @@
         public static {3} GetModel({4})
         {{
             var sql = new StringBuilder();
-            sql.Append("SELECT TOP 1 {5} FROM {6} ");
-            sql.Append(" WHERE {7}");
+            sql.Append("SELECT {5} FROM {6} ");
+            sql.Append(" WHERE rownum < 2 {7}");
             {8} ret = null;
             using (var conn = GetOpenConnection())
             {{

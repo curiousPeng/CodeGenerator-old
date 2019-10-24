@@ -128,89 +128,33 @@ namespace Generator.Core
                 _configuration.JoinedTables.ToDictionary(p => p.Table_Main.Name, p => Tuple.Create(p.Table_Sub.Name, p.Sub_InnerName));
         }
 
-        public static Type MapCommonType(string dbtype)
-        {
-            if (string.IsNullOrEmpty(dbtype)) return Type.Missing.GetType();
-            dbtype = dbtype.ToLower();
-            Type commonType = typeof(object);
-            switch (dbtype)
-            {
-                case "bigint": commonType = typeof(long); break;
-                case "binary": commonType = typeof(byte[]); break;
-                case "bit": commonType = typeof(bool); break;
-                case "char": commonType = typeof(string); break;
-                case "date": commonType = typeof(DateTime); break;
-                case "datetime": commonType = typeof(DateTime); break;
-                case "datetime2": commonType = typeof(DateTime); break;
-                case "datetimeoffset": commonType = typeof(DateTimeOffset); break;
-                case "decimal": commonType = typeof(decimal); break;
-                case "float": commonType = typeof(float); break;
-                case "double": commonType = typeof(double); break;
-                case "image": commonType = typeof(byte[]); break;
-                case "int": commonType = typeof(int); break;
-                case "money": commonType = typeof(decimal); break;
-                case "nchar": commonType = typeof(string); break;
-                case "ntext": commonType = typeof(string); break;
-                case "numeric": commonType = typeof(decimal); break;
-                case "nvarchar": commonType = typeof(string); break;
-                case "real": commonType = typeof(Single); break;
-                case "smalldatetime": commonType = typeof(DateTime); break;
-                case "smallint": commonType = typeof(short); break;
-                case "smallmoney": commonType = typeof(decimal); break;
-                case "sql_variant": commonType = typeof(object); break;
-                case "sysname": commonType = typeof(object); break;
-                case "text": commonType = typeof(string); break;
-                case "time": commonType = typeof(TimeSpan); break;
-                case "timestamp": commonType = typeof(byte[]); break;
-                case "tinyint": commonType = typeof(byte); break;
-                case "uniqueidentifier": commonType = typeof(Guid); break;
-                case "varbinary": commonType = typeof(byte[]); break;
-                case "varchar": commonType = typeof(string); break;
-                case "xml": commonType = typeof(string); break;
-                default: commonType = typeof(object); break;
-            }
-            return commonType;
-        }
-
         public static string MapCsharpType(string dbtype)
         {
             if (string.IsNullOrEmpty(dbtype)) return dbtype;
-            dbtype = dbtype.ToLower();
             string csharpType = "object";
             switch (dbtype)
             {
-                case "bigint": csharpType = "long"; break;
-                case "binary": csharpType = "byte[]"; break;
-                case "bit": csharpType = "bool"; break;
-                case "char": csharpType = "string"; break;
-                case "date": csharpType = "DateTime"; break;
+                case "BFILE": csharpType = "byte[]"; break;
+                case "BLOB": csharpType = "byte[]"; break;
+                case "CHAR": csharpType = "string"; break;
+                case "CLOB": csharpType = "string"; break;
+                case "DATE": csharpType = "DateTime"; break;
                 case "datetime": csharpType = "DateTime"; break;
-                case "datetime2": csharpType = "DateTime"; break;
-                case "datetimeoffset": csharpType = "DateTimeOffset"; break;
-                case "decimal": csharpType = "decimal"; break;
-                case "float": csharpType = "float"; break;
-                case "double": csharpType = "double"; break;
-                case "image": csharpType = "byte[]"; break;
-                case "int": csharpType = "int"; break;
-                case "money": csharpType = "decimal"; break;
-                case "nchar": csharpType = "string"; break;
-                case "ntext": csharpType = "string"; break;
-                case "numeric": csharpType = "decimal"; break;
-                case "nvarchar": csharpType = "string"; break;
-                case "real": csharpType = "Single"; break;
-                case "smalldatetime": csharpType = "DateTime"; break;
-                case "smallint": csharpType = "short"; break;
-                case "smallmoney": csharpType = "decimal"; break;
-                case "sql_variant": csharpType = "object"; break;
-                case "sysname": csharpType = "object"; break;
-                case "text": csharpType = "string"; break;
-                case "time": csharpType = "TimeSpan"; break;
-                case "timestamp": csharpType = "byte[]"; break;
-                case "tinyint": csharpType = "byte"; break;
-                case "uniqueidentifier": csharpType = "Guid"; break;
-                case "varbinary": csharpType = "byte[]"; break;
-                case "varchar": csharpType = "string"; break;
-                case "xml": csharpType = "string"; break;
+                case "LONG": csharpType = "string"; break;
+                case "LONG RAW": csharpType = "byte[]"; break;
+                case "INTEGER": csharpType = "decimal"; break;
+                case "FLOAT": csharpType = "decimal"; break;
+                case "NCHAR": csharpType = "string"; break;
+                case "NCLOB": csharpType = "string"; break;
+                case "NUMBER": csharpType = "decimal"; break;
+                case "NVARCHAR2": csharpType = "string"; break;
+                case "RAW": csharpType = "byte[]"; break;
+                case "ROWID": csharpType = "string"; break;
+                case "TIMESTAMP": csharpType = "DateTime"; break;
+                case "VARCHAR2": csharpType = "string"; break;
+                case "INTERVAL DAY TO  SECOND": csharpType = "TimeSpan"; break;
+                case "INTERVAL YEAR TO  MONTH": csharpType = "int"; break;
+                case "NUMBER(1)": csharpType = "bool"; break;
                 default: csharpType = "object"; break;
             }
             return csharpType;
@@ -256,28 +200,30 @@ namespace Generator.Core
                 {
                     continue;
                 }
+
+                var virName = ConvertToCamelCase(table.Name);
                 sb.Append(config.DAL_HeaderNote);
                 sb.AppendLine(string.Join(Environment.NewLine, config.DAL_Using));
                 sb.AppendLine($"using {config.DAL_Namespace}.Metadata;");
-                if (config.JoinedTables.Count > 0)
-                {
-                    sb.AppendLine($"using {config.Model_Namespace}.JoinedViewModel;");
-                }
+                //if (config.JoinedTables.Count > 0)
+                //{
+                //    sb.AppendLine($"using {config.Model_Namespace}.JoinedViewModel;");
+                //}
                 sb.AppendLine();
                 sb.AppendLine($"namespace {config.DAL_Namespace}");
                 sb.AppendLine("{");
-                sb.AppendLine(g.Get_MetaData1(table.Name));
+                sb.AppendLine(g.Get_MetaData1(virName));
                 sb.AppendLine(string.Format("{0}public partial class {1}{2}{3}{4}",
                         '\t',
                         config.DAL_ClassNamePrefix,
-                        table.Name,
+                        virName,
                         config.DAL_ClassNameSuffix,
                         string.IsNullOrWhiteSpace(config.DAL_BaseClass) ? string.Empty : (" : " + config.DAL_BaseClass)));
                 sb.AppendLine(string.Format("{0}{{", '\t'));
-                if (config.JoinedTables.ContainsKey(table.Name))
-                {
-                    sb.AppendLine(g.Get_MetaData2(table.Name, config.JoinedTables[table.Name]));
-                }
+                //if (config.JoinedTables.ContainsKey(table.Name))
+                //{
+                //    sb.AppendLine(g.Get_MetaData2(table.Name, config.JoinedTables[table.Name]));
+                //}
                 sb.AppendLine(g.Get_MetaData3(table.Name));
                 // 按方法生成
                 foreach (var item in config.DAL_Methods)
@@ -322,20 +268,20 @@ namespace Generator.Core
                             break;
                         case "getpage":
                             {
-                                sb.Append(g.Get_GetListByPage(table.Name,table.PrimaryKey.Last().Name));
+                                sb.Append(g.Get_GetListByPage(table.Name));
                             }
                             break;
                     }
                 }
                 // Joined
-                if (config.JoinedTables.ContainsKey(table.Name))
-                {
-                    sb.Append(g.Get_Joined(table.Name, config.JoinedTables[table.Name]));
-                }
+                //if (config.JoinedTables.ContainsKey(table.Name))
+                //{
+                //    sb.Append(g.Get_Joined(table.Name, config.JoinedTables[table.Name]));
+                //}
                 sb.AppendLine(string.Format("{0}}}", '\t'));
                 sb.AppendLine("}");
 
-                File.AppendAllText(Path.Combine(path, string.Format("{0}Helper.cs", table.Name)), sb.ToString());
+                File.AppendAllText(Path.Combine(path, string.Format("{0}Helper.cs", virName)), sb.ToString());
                 sb.Clear();
 
                 if (progress != null)
@@ -380,7 +326,7 @@ namespace Generator.Core
                 sb.AppendLine(g.Get_Class(table.Name));
                 sb.AppendLine("}");
 
-                File.AppendAllText(Path.Combine(path, string.Format("{0}.cs", table.Name)), sb.ToString());
+                File.AppendAllText(Path.Combine(path, string.Format("{0}.cs", ConvertToCamelCase(table.Name))), sb.ToString());
                 sb.Clear();
 
                 if (progress != null)
@@ -647,6 +593,18 @@ namespace Generator.Core
         {
             return config.ExceptColumns.ContainsKey("*") && config.ExceptColumns["*"].Contains(colunm) ||
                 config.ExceptColumns.ContainsKey(table) && config.ExceptColumns[table].Contains(colunm);
+        }
+
+        private static string ConvertToCamelCase(string str)
+        {
+            str = str.ToLower();
+            var strArray = str.Split('_');
+            var sb = new StringBuilder();
+            foreach (var word in strArray)
+            {
+                sb.Append(string.Format("{0}{1}", word.First().ToString().ToUpper(), word.Substring(1)));
+            }
+            return sb.ToString();
         }
     }
 }

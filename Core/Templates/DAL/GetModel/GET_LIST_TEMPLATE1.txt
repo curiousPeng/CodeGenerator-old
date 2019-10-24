@@ -39,9 +39,12 @@
 			}}
 
             var sql = new StringBuilder();
-            sql.Append("SELECT TOP " + top.ToString() + " * FROM {2}");
+            sql.Append("SELECT * FROM {2}");
+			sql.Append(" WHERE rownum <"+ top.ToString());
             if (where_str != string.Empty)
-				sql.Append(" WHERE " + where_str);
+				sql.Append(" and "+ where_str);
+			
+				
 			if (orderBy != null && orderBy.Length > 0)
                 sql.Append(" ORDER BY " + string.Join(", ", orderBy.Select(p => $"{{p.Name}} {{p.Asc}}")));
 

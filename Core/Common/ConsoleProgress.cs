@@ -31,7 +31,6 @@ namespace Generator.Common
         /// 光标的行位置。从上到下，从 0 开始为行编号。
         /// </summary>
         public int Top { get; set; }
-
         /// <summary>
         /// 进度条宽度。
         /// </summary>

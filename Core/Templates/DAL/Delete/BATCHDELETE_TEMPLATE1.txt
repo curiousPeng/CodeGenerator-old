@@ -7,7 +7,7 @@
         {{
             var sql = new StringBuilder();
             sql.Append("DELETE FROM {3} ");
-            sql.Append(" WHERE {4} IN @ids");
+            sql.Append(" WHERE {4} IN :ids");
             var ret = false;
             using (var conn = GetOpenConnection())
             {{

@@ -1,5 +1,6 @@
 ﻿using Generator.Template;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Generator.Core
@@ -16,12 +17,8 @@ namespace Generator.Core
         public string Get_Class(string tableName)
         {
             var table_config = _config[tableName];
-            var trace = _config.TraceFieldTables.Contains("*") || _config.TraceFieldTables.Contains(tableName);
-
+            tableName = ConvertToCamelCase(tableName);
             var sb1 = new StringBuilder();
-            var sb2 = new StringBuilder();
-            var sb3 = new StringBuilder();
-            var sb5 = new StringBuilder();
             for (int i = 0; i < table_config.Columns.Count; i++)
             {
                 var p = table_config.Columns[i];
@@ -33,39 +30,29 @@ namespace Generator.Core
                 {
                     sb1.AppendLine(string.Format("{0}{0}private {1} _{2};", '\t', p.DbType, p.Name.ToLower()));
                 }
-
-                if (trace)
-                {
-                    sb2.AppendLine(string.Format("{0}{0}[Newtonsoft.Json.JsonProperty] private volatile int _ver_{1};", '\t', p.Name.ToLower()));
-                    sb3.AppendLine($"\t\t\tif (_ver_{p.Name.ToLower()} != 0)");
-                    sb3.AppendLine("\t\t\t{");
-                    sb3.AppendLine($"\t\t\t\tupdate_fields.Add({tableName}Helper.Columns.{p.Name});");
-                    sb3.AppendLine($"\t\t\t\tif (!preserve) _ver_{ p.Name.ToLower()} = 0;");
-                    sb3.AppendLine("\t\t\t}");
-                    sb5.AppendLine($"\t\t\t_ver_{p.Name.ToLower()} = 0;");
-                }
             }
-            sb1.Append("\t\tprivate int ___pagerow;");
 
             var sb4 = new StringBuilder();
             for (int i = 0; i < table_config.Columns.Count; i++)
             {
                 var p = table_config.Columns[i];
+                string virtualName = ConvertToCamelCase(p.Name);
                 if (i == table_config.Columns.Count - 1)
                 {
                     sb4.AppendLine(string.Format("{0}{0}/// <summary>", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}/// {1}", '\t', p.Comment));
                     sb4.AppendLine(string.Format("{0}{0}/// </summary>", '\t'));
+                    sb4.AppendLine(string.Format("{0}{0}[Column(\"{1}\")]", '\t', p.Name));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb4.AppendLine(string.Format("{0}{0}{{", '\t'));
-                    sb4.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; {2}}}", '\t', p.Name.ToLower(), trace ? $"if (_____flag) System.Threading.Interlocked.Increment(ref _ver_{p.Name.ToLower()}); " : string.Empty));
+                    sb4.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; {2}}}", '\t', p.Name.ToLower(), string.Empty));
                     sb4.AppendLine(string.Format("{0}{0}{0}get {{ return _{1}; }}", '\t', p.Name.ToLower()));
                     sb4.AppendLine(string.Format("{0}{0}}}", '\t'));
                 }
@@ -74,58 +61,21 @@ namespace Generator.Core
                     sb4.AppendLine(string.Format("{0}{0}/// <summary>", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}/// {1}", '\t', p.Comment));
                     sb4.AppendLine(string.Format("{0}{0}/// </summary>", '\t'));
+                    sb4.AppendLine(string.Format("{0}{0}[Column(\"{1}\")]", '\t', p.Name));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb4.AppendLine(string.Format("{0}{0}{{", '\t'));
-                    sb4.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; {2}}}", '\t', p.Name.ToLower(), trace ? $"if (_____flag) System.Threading.Interlocked.Increment(ref _ver_{p.Name.ToLower()}); " : string.Empty));
+                    sb4.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; {2}}}", '\t', p.Name.ToLower(), string.Empty));
                     sb4.AppendLine(string.Format("{0}{0}{0}get {{ return _{1}; }}", '\t', p.Name.ToLower()));
                     sb4.AppendLine(string.Format("{0}{0}}}", '\t'));
                     sb4.AppendLine();
                 }
-            }
-            sb4.AppendLine();
-            sb4.AppendLine("\t\tpublic int __PageRow");
-            sb4.AppendLine("\t\t{");
-            sb4.AppendLine("\t\t\tset { ___pagerow = value; }");
-            sb4.AppendLine("\t\t\tget { return ___pagerow; }");
-            sb4.Append("\t\t}");
-
-            if (trace)
-            {
-                sb4.AppendLine();
-                // GetTraceFields
-                sb4.AppendLine();
-                sb4.AppendLine($"\t\tpublic IList<{tableName}Column> GetTraceFields(bool preserve = false)");
-                sb4.AppendLine("\t\t{");
-                sb4.AppendLine($"\t\t\tvar update_fields = new List<{tableName}Column>();");
-                sb4.AppendLine(sb3.ToString());
-                sb4.AppendLine("\t\t\treturn update_fields;");
-                sb4.AppendLine("\t\t}");
-                // OpenTrace
-                sb4.AppendLine();
-                sb4.AppendLine("\t\tpublic void BeginTrace()");
-                sb4.AppendLine("\t\t{");
-                sb4.AppendLine("\t\t\t_____flag = true;");
-                sb4.AppendLine("\t\t}");
-                sb4.AppendLine();
-                // CloseTrace
-                sb4.AppendLine("\t\tpublic void EndTrace()");
-                sb4.AppendLine("\t\t{");
-                sb4.AppendLine("\t\t\t_____flag = false;");
-                sb4.AppendLine("\t\t}");
-                // ResetTrace
-                sb4.AppendLine();
-                sb4.AppendLine("\t\tpublic void ResetTrace()");
-                sb4.AppendLine("\t\t{");
-                sb4.Append(sb5.ToString());
-                sb4.AppendLine("\t\t\t_____flag = false;");
-                sb4.Append("\t\t}");
             }
 
             var str = string.Format(ModelTemplate.CLASS_TEMPLATE,
@@ -137,7 +87,7 @@ namespace Generator.Core
                                     string.IsNullOrWhiteSpace(_config.Model_BaseClass) ? string.Empty : (" : " + _config.Model_BaseClass),
                                     tableName,
                                     Environment.NewLine + sb1.ToString(),
-                                    trace ? Environment.NewLine + "\t\tprivate bool _____flag;" + Environment.NewLine + sb2.ToString() : string.Empty,
+                                    string.Empty,
                                     sb4.ToString());
             return str;
         }
@@ -164,18 +114,20 @@ namespace Generator.Core
             for (int i = 0; i < table_config.Columns.Count; i++)
             {
                 var p = table_config.Columns[i];
+                string virtualName = ConvertToCamelCase(p.Name);
                 if (i == table_config.Columns.Count - 1)
                 {
                     sb2.AppendLine(string.Format("{0}{0}/// <summary>", '\t'));
                     sb2.AppendLine(string.Format("{0}{0}/// {1}", '\t', p.Comment));
                     sb2.AppendLine(string.Format("{0}{0}/// </summary>", '\t'));
+                    sb2.AppendLine(string.Format("{0}{0}[Column(\"{1}\")]", '\t', virtualName));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb2.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb2.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb2.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb2.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb2.AppendLine(string.Format("{0}{0}{{", '\t'));
                     sb2.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; }}", '\t', p.Name.ToLower()));
@@ -195,11 +147,11 @@ namespace Generator.Core
                     sb2.AppendLine(string.Format("{0}{0}/// </summary>", '\t'));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb2.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb2.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb2.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb2.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb2.AppendLine(string.Format("{0}{0}{{", '\t'));
                     sb2.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; }}", '\t', p.Name.ToLower()));
@@ -243,18 +195,20 @@ namespace Generator.Core
             for (int i = 0; i < table_config.Columns.Count; i++)
             {
                 var p = table_config.Columns[i];
+                string virtualName = ConvertToCamelCase(p.Name);
                 if (i == table_config.Columns.Count - 1)
                 {
                     sb4.AppendLine(string.Format("{0}{0}{0}/// <summary>", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}{0}/// {1}", '\t', p.Comment));
                     sb4.AppendLine(string.Format("{0}{0}{0}/// </summary>", '\t'));
+                    sb4.AppendLine(string.Format("{0}{0}[Column(\"{1}\")]", '\t', virtualName));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb4.AppendLine(string.Format("{0}{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb4.AppendLine(string.Format("{0}{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb4.AppendLine(string.Format("{0}{0}{0}{{", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}{0}{0}set {{ _{1} = value; }}", '\t', p.Name.ToLower()));
@@ -268,11 +222,11 @@ namespace Generator.Core
                     sb4.AppendLine(string.Format("{0}{0}{0}/// </summary>", '\t'));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb4.AppendLine(string.Format("{0}{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb4.AppendLine(string.Format("{0}{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb4.AppendLine(string.Format("{0}{0}{0}{{", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}{0}{0}set {{ _{1} = value; }}", '\t', p.Name.ToLower()));
@@ -324,18 +278,20 @@ namespace Generator.Core
             for (int i = 0; i < table_config.Columns.Count; i++)
             {
                 var p = table_config.Columns[i];
+                string virtualName = ConvertToCamelCase(p.Name);
                 if (i == table_config.Columns.Count - 1)
                 {
                     sb4.AppendLine(string.Format("{0}{0}/// <summary>", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}/// {1}", '\t', p.Comment));
                     sb4.AppendLine(string.Format("{0}{0}/// </summary>", '\t'));
+                    sb4.AppendLine(string.Format("{0}{0}[Column(\"{1}\")]", '\t', virtualName));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb4.AppendLine(string.Format("{0}{0}{{", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; {2}}}", '\t', p.Name.ToLower(), $"_ver_{p.Name.ToLower()}++; "));
@@ -349,11 +305,11 @@ namespace Generator.Core
                     sb4.AppendLine(string.Format("{0}{0}/// </summary>", '\t'));
                     if (p.Nullable && p.DbType != "string")
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1}? {2}", '\t', p.DbType, virtualName));
                     }
                     else
                     {
-                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, p.Name));
+                        sb4.AppendLine(string.Format("{0}{0}public {1} {2}", '\t', p.DbType, virtualName));
                     }
                     sb4.AppendLine(string.Format("{0}{0}{{", '\t'));
                     sb4.AppendLine(string.Format("{0}{0}{0}set {{ _{1} = value; {2}}}", '\t', p.Name.ToLower(), $"_ver_{p.Name.ToLower()}++; "));
@@ -383,6 +339,17 @@ namespace Generator.Core
                                     sb2.ToString(),
                                     sb4.ToString());
             return str;
+        }
+        private static string ConvertToCamelCase(string str)
+        {
+            str = str.ToLower();
+            var strArray = str.Split('_');
+            var sb = new StringBuilder();
+            foreach (var word in strArray)
+            {
+                sb.Append(string.Format("{0}{1}", word.First().ToString().ToUpper(), word.Substring(1)));
+            }
+            return sb.ToString();
         }
     }
 }

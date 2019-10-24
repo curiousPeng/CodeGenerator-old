@@ -58,15 +58,15 @@ namespace Generator.Template
         public readonly static string GET_LIST_BY_PAGE_TEMPLATE = GetTemplateFile("GET_LIST_BY_PAGE_TEMPLATE");
         #endregion
 
-        #region Joined
-        public readonly static string INNER_JOIN_TEMPLATE = GetTemplateFile("INNER_JOIN_TEMPLATE");
-        public readonly static string LEFT_JOIN_TEMPLATE = GetTemplateFile("LEFT_JOIN_TEMPLATE");
-        public readonly static string RIGHT_JOIN_TEMPLATE = GetTemplateFile("RIGHT_JOIN_TEMPLATE");
-        public readonly static string JOINED_PAGE_TEMPLATE1 = GetTemplateFile("INNER_JOINED_PAGE_TEMPLATE");
-        public readonly static string JOINED_PAGE_TEMPLATE2 = GetTemplateFile("LEFT_JOINED_PAGE_TEMPLATE");
-        public readonly static string JOINED_PAGE_TEMPLATE3 = GetTemplateFile("RIGHT_JOINED_PAGE_TEMPLATE");
-        public readonly static string JOINED_PAGE_TEMPLATE4 = GetTemplateFile("PRIVATE_JOINED_PAGE_TEMPLATE");
-        #endregion
+        //#region Joined
+        //public readonly static string INNER_JOIN_TEMPLATE = GetTemplateFile("INNER_JOIN_TEMPLATE");
+        //public readonly static string LEFT_JOIN_TEMPLATE = GetTemplateFile("LEFT_JOIN_TEMPLATE");
+        //public readonly static string RIGHT_JOIN_TEMPLATE = GetTemplateFile("RIGHT_JOIN_TEMPLATE");
+        //public readonly static string JOINED_PAGE_TEMPLATE1 = GetTemplateFile("INNER_JOINED_PAGE_TEMPLATE");
+        //public readonly static string JOINED_PAGE_TEMPLATE2 = GetTemplateFile("LEFT_JOINED_PAGE_TEMPLATE");
+        //public readonly static string JOINED_PAGE_TEMPLATE3 = GetTemplateFile("RIGHT_JOINED_PAGE_TEMPLATE");
+        //public readonly static string JOINED_PAGE_TEMPLATE4 = GetTemplateFile("PRIVATE_JOINED_PAGE_TEMPLATE");
+        //#endregion
 
         #region 辅助方法
         private static string GetTemplateFile(string name)

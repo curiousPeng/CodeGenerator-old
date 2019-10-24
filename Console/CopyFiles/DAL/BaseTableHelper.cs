@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using MySql.Data.MySqlClient;
+using Oracle.ManagedDataAccess.Client;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -19,7 +19,7 @@ namespace DataLayer.Base
 
         static BaseTableHelper()
         {
-            // 添加json配置文件路径
+            // 添加json配置文件路径 nuget 引用 Microsoft.Extensions.Configuration; Microsoft.Extensions.Configuration.FileExtensions;Microsoft.Extensions.Configuration.Json;
 #if LOCAL
             var builder = new ConfigurationBuilder().SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory).AddJsonFile("appsettings.Local.json");
 #elif DEBUG
@@ -32,18 +32,9 @@ namespace DataLayer.Base
             ConnectionString = configurationRoot.GetSection("DbConnect:ConnectString").Value;
         }
 
-        protected static MySqlConnection GetOpenConnection(bool mars = false)
+        protected static OracleConnection GetOpenConnection()
         {
-            var cs = ConnectionString;
-            if (mars)
-            {
-                var scsb = new MySqlConnectionStringBuilder(cs)
-                {
-                    AllowBatch = true
-                };
-                cs = scsb.ConnectionString;
-            }
-            var connection = new MySqlConnection(cs);
+            var connection = new OracleConnection(ConnectionString);
             connection.Open();
             return connection;
         }
@@ -51,28 +42,30 @@ namespace DataLayer.Base
         protected static PageDataView<T> Paged<T>(
             string tableName,
             string where,
-            string orderBy,
-            string columns,
             int pageSize,
-            int currentPage, string primaryKey)
+            int currentPage,
+            string orderBy="")
         {
             var result = new PageDataView<T>();
             var count_sql = string.Format("SELECT COUNT(1) FROM {0}", tableName);
-            if (string.IsNullOrWhiteSpace(orderBy))
-            {
-                orderBy = "id desc";
-            }
+
+            var whereIn = "WHERE 1=1 ";
             if (!string.IsNullOrWhiteSpace(where))
             {
                 if (where.ToLower().Contains("where"))
                 {
                     throw new ArgumentException("where子句不需要带where关键字");
                 }
-                where = " WHERE " + where;
+                whereIn = string.Format("{0} and {1}", whereIn, where);
             }
-            var pageStart = (currentPage - 1) * pageSize;
-            var sql = string.Format("SELECT {0} FROM {2} where {6} >=(select {6} from {2} {3}  ORDER BY {1} limit {4},1) limit {5}; ", columns, orderBy, tableName, where, pageStart, pageSize, primaryKey);
-            count_sql += where;
+            var startNum = (currentPage - 1) * pageSize;
+            var endNum = currentPage * pageSize;
+            var sql = string.Format("SELECT * FROM (SELECT tt.*, ROWNUM AS rowno FROM(SELECT t.* FROM {1} WHERE {2} ORDER BY {0})tt WHERE ROWNUM <= {4}) " + "table_alias WHERE table_alias.rowno > {4} ", orderBy, tableName, where, startNum, endNum);
+            if (string.IsNullOrWhiteSpace(orderBy))
+            {
+                sql = string.Format("SELECT * FROM (SELECT t.*,ROWNUM AS rowno FROM {1} t {2} and ROWNUM <= {4}) table_alias WHERE table_alias.rowno > {3} ", orderBy, tableName, whereIn, startNum, endNum);
+            }
+            count_sql += whereIn;
             using (var conn = GetOpenConnection())
             {
                 result.TotalRecords = conn.ExecuteScalar<int>(count_sql);
