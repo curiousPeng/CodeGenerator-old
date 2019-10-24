@@ -139,49 +139,6 @@ namespace Console
             Environment.Exit(0);
         }
 
-        // link: https://stackoverflow.com/questions/18596876/go-statements-blowing-up-sql-execution-in-net
-        static void ReCreateDB(string connStr, Encoding encoding)
-        {
-            var config_path = SQLMetaDataHelper.Config.ReCreateDB.SQLFilePath;
-            var db_names = SQLMetaDataHelper.Config.ReCreateDB.DBs;
-            if (string.IsNullOrWhiteSpace(config_path) || db_names == null || db_names.Count == 0)
-            {
-                return;
-            }
-
-            var db = FindDBName(connStr);
-            if (string.IsNullOrWhiteSpace(db))
-            {
-                return;
-            }
-
-            var files = Directory.GetFiles(config_path, "*.sql", SearchOption.TopDirectoryOnly);
-            foreach (var item in db_names)
-            {
-                System.Console.WriteLine("尝试重新生成数据库[" + item.Name + "]...");
-                System.Console.WriteLine("检测是否存在该数据库");
-                if (IsExist(connStr, item.Name))
-                {
-                    connStr = connStr.Replace(db, item.Name);
-                    using (var conn = new SqlConnection(connStr))
-                    {
-                        var svr = new Server(new ServerConnection(conn));
-                        foreach (var file_path in files)
-                        {
-                            var script = File.ReadAllText(file_path, Encoding.GetEncoding("gb2312"));
-                            svr.ConnectionContext.ExecuteNonQuery(script);
-                        }
-                    }
-                    System.Console.WriteLine("存在，重新生成数据库[" + item.Name + "]成功");
-                }
-                else
-                {
-                    System.Console.WriteLine("不存在该数据库，结束");
-                }
-                System.Console.WriteLine();
-            }
-        }
-
         static string FindDBName(string connStr)
         {
             var db_name = string.Empty;
@@ -203,29 +160,6 @@ namespace Console
             return db_name;
         }
 
-        static bool IsExist(string connStr, string db)
-        {
-            using (var conn = GetOpenConnection(connStr))
-            {
-                return conn.ExecuteScalar<int>("select count(*) From master.dbo.sysdatabases where name='" + db + "'") > 0;
-            }
-        }
-
-        static SqlConnection GetOpenConnection(string connStr, bool mars = false)
-        {
-            var cs = connStr;
-            if (mars)
-            {
-                var scsb = new SqlConnectionStringBuilder(cs)
-                {
-                    MultipleActiveResultSets = true
-                };
-                cs = scsb.ConnectionString;
-            }
-            var connection = new SqlConnection(cs);
-            connection.Open();
-            return connection;
-        }
 
         static void Print(string message)
         {
