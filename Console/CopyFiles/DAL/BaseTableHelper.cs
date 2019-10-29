@@ -48,17 +48,11 @@ namespace DataLayer.Base
             return connection;
         }
 
-        protected static PageDataView<T> Paged<T>(
-            string tableName,
-            string where,
-            string orderBy,
-            string columns,
-            int pageSize,
-            int currentPage, string primaryKey)
+        protected static PageDataView<T> Paged<T>(string tableName, string where, string orderBy, string columns, int pageSize, int currentPage, string primaryKey)
         {
             var result = new PageDataView<T>();
             var count_sql = string.Format("SELECT COUNT(1) FROM {0}", tableName);
-            
+
             if (!string.IsNullOrWhiteSpace(where))
             {
                 if (where.ToLower().Contains("where"))
@@ -68,15 +62,12 @@ namespace DataLayer.Base
                 where = " WHERE " + where;
             }
             var pageStart = (currentPage - 1) * pageSize;
-            if (string.IsNullOrWhiteSpace(orderBy))
+            var sql = string.Format("SELECT {0} FROM {2} where {6} >=(select {6} from {2} {3}  limit {4},1) limit {5}; ", columns, "", tableName, where, pageStart, pageSize, primaryKey);
+            if (!string.IsNullOrWhiteSpace(orderBy))
             {
-                var sql = string.Format("SELECT {0} FROM {2} where {6} >=(select {6} from {2} {3}  limit {4},1) limit {5}; ", columns, "", tableName, where, pageStart, pageSize, primaryKey);
+                sql = string.Format("SELECT {0} FROM {2} where {6} >=(select {6} from {2} {3}  ORDER BY {1} limit {4},1) limit {5}; ", columns, orderBy, tableName, where, pageStart, pageSize, primaryKey);
             }
-            else
-            {
-                var sql = string.Format("SELECT {0} FROM {2} where {6} >=(select {6} from {2} {3}  ORDER BY {1} limit {4},1) limit {5}; ", columns, orderBy, tableName, where, pageStart, pageSize, primaryKey);
-            }
-            
+
             count_sql += where;
             using (var conn = GetOpenConnection())
             {

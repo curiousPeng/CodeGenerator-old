@@ -267,7 +267,7 @@ namespace DataLayer.Base
                         }
                         break;
                     case ExpressionType.Parameter:
-                        sb.Append($"[{node.Expression.Type.Name}].[{node.Member.Name}]");
+                        sb.Append($"`{node.Expression.Type.Name}`.`{node.Member.Name}`");
                         if (node.Type == typeof(bool))
                         {
                             boolean = true;
