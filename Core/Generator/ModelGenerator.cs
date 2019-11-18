@@ -45,7 +45,6 @@ namespace Generator.Core
                     sb5.AppendLine($"\t\t\t_ver_{p.Name.ToLower()} = 0;");
                 }
             }
-            sb1.Append("\t\tprivate int ___pagerow;");
 
             var sb4 = new StringBuilder();
             for (int i = 0; i < table_config.Columns.Count; i++)
@@ -90,12 +89,6 @@ namespace Generator.Core
                 }
             }
             sb4.AppendLine();
-            sb4.AppendLine("\t\tpublic int __PageRow");
-            sb4.AppendLine("\t\t{");
-            sb4.AppendLine("\t\t\tset { ___pagerow = value; }");
-            sb4.AppendLine("\t\t\tget { return ___pagerow; }");
-            sb4.Append("\t\t}");
-
             if (trace)
             {
                 sb4.AppendLine();
