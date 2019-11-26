@@ -322,7 +322,7 @@ namespace DataLayer.Base
                 quote = false;
                 this.Visit(node.Arguments[0]);
                 quote = true;
-                sb.Append("')");
+                sb.Append(")");
                 return node;
             }
             if (node.Method == typeof(string).GetMethod("Equals", new[] { typeof(string) }))
