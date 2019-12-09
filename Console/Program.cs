@@ -47,8 +47,8 @@ namespace Console
                 };//准备创建字段信息
 
                 bool _isfail = false;
-                List<TableColumns> columns = GetTableColumns(table.table_name,conn_str);
-                var pk = PKs.Where(p =>p.table_name == table.table_name).FirstOrDefault();
+                List<TableColumns> columns = GetTableColumns(table.table_name, conn_str);
+                var pk = PKs.Where(p => p.table_name == table.table_name).FirstOrDefault();
                 if (pk == null)
                 {
                     pk = new TablePKColumn();
@@ -63,15 +63,15 @@ namespace Console
                             column.data_type = "NUMBER(1)";
                         }
                     }
-                    
+
                     var ColumData = new ColumnMetaData
                     {
                         Comment = column.comments,
-                        
+
                         DbType = SQLMetaDataHelper.MapCsharpType(column.data_type),
-                        HasDefaultValue =  false,
-                        IsIdentity =  false,
-                        IsPrimaryKey = pk.column_name==column.column_name ? true : false,
+                        HasDefaultValue = false,
+                        IsIdentity = false,
+                        IsPrimaryKey = pk.column_name == column.column_name ? true : false,
                         Name = column.column_name,
                         Nullable = column.nullable == "Y" ? true : false
                     };
@@ -84,7 +84,7 @@ namespace Console
                     }
                     tableData.Columns.Add(ColumData);
                 }
-               
+
                 if (!_isfail)
                 {
                     config.Tables.Add(tableData);
@@ -95,8 +95,7 @@ namespace Console
             //parser.Parse(data);
             Print("解析完毕，生成中间配置文件...");
             // 生成中间配置文件
-            var config_json_str = JsonConvert.SerializeObject
-(config);
+            var config_json_str = JsonConvert.SerializeObject(config);
             SQLMetaDataHelper.OutputConfig(config_json_str);
 
             // 生成最终文件
@@ -116,8 +115,8 @@ namespace Console
                     SQLMetaDataHelper.OutputModel(config);
 
                     // 生成Enum最终文件
-                   // Print("生成Enum...");
-                   // SQLMetaDataHelper.OutputEnum(config);
+                    // Print("生成Enum...");
+                    // SQLMetaDataHelper.OutputEnum(config);
 
                     // 检测partial字段有效性
                     Print("检测partial字段有效性...");
