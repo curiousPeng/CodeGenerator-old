@@ -21,7 +21,13 @@ namespace Generator.Common
         ColorBrush
     }
 
-    public class ConsoleProgressBar
+    public interface IProgressBar
+    {
+        int Dispaly(int value);
+        void Reset();
+    }
+
+    public class ConsoleProgressBar : IProgressBar
     {
         /// <summary>
         /// 光标的列位置。将从 0 开始从左到右对列进行编号。
@@ -122,6 +128,18 @@ namespace Generator.Common
             }
 
             return value;
+        }
+
+        public void Reset()
+        {
+            this.Left = Console.CursorLeft;
+            this.Top = Console.CursorTop;
+            Console.SetCursorPosition(this.Left, this.Top);
+            Console.Write("[");
+            Console.SetCursorPosition(this.Left + this.Width - 1, this.Top);
+            Console.Write("]");
+            this.Width = 50;
+            this.Value = 0;
         }
     }
 }

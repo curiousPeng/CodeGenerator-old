@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Generator.Common;
 using Generator.Core;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
@@ -26,8 +27,6 @@ namespace Console
                 Environment.Exit(0);
             }
 
-            //ReCreateDB(conn_str, Encoding.GetEncoding("gb2312"));
-
             var dbcode = FindDBName(conn_str);
             Print("解析数据库元数据...");
             using (MySqlConnection connection = new MySqlConnection(conn_str))
@@ -38,7 +37,10 @@ namespace Console
                 var CommandText = "SHOW TABLES;";
                 connection.Open();
                 List<string> TableNames = connection.Query<string>(CommandText).ToList();
-
+                // 解析数据库元数据
+                IProgressBar progress = GetProgressBar();
+                var parser = new MetaDataParser(progress);
+                var count = 0;
                 foreach (var name in TableNames)
                 {
                     var table = new TableMetaData
@@ -91,6 +93,8 @@ namespace Console
                     {
                         config.Tables.Add(table);
                     }
+                    // 打印进度
+                    parser.ProgressPrint(++count, TableNames.Count);
                 }
                 connection.Close();
 
@@ -166,6 +170,10 @@ namespace Console
             System.Console.WriteLine();
             System.Console.WriteLine();
             System.Console.WriteLine(message);
+        }
+        static ConsoleProgressBar GetProgressBar()
+        {
+            return new ConsoleProgressBar(System.Console.CursorLeft, System.Console.CursorTop, 50, ProgressBarType.Character);
         }
     }
 }
