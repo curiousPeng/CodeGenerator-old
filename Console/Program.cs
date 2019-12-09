@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Generator.Common;
 using Generator.Core;
 using Newtonsoft.Json;
 using Oracle.ManagedDataAccess.Client;
@@ -24,15 +25,16 @@ namespace Console
                 Environment.Exit(0);
             }
 
-            //ReCreateDB(conn_str, Encoding.GetEncoding("gb2312"));
-
             Print("解析数据库元数据...");
             var config = new SQLMetaData();
             SQLMetaDataHelper.InitConfig(config);
 
             List<TableFileds> Tables = GetUserAllTables(conn_str);
             List<TablePKColumn> PKs = GetAllTablePKColumn(conn_str);
-
+            // 解析数据库元数据
+            IProgressBar progress = GetProgressBar();
+            var parser = new MetaDataParser(progress);
+            var count = 0;
             foreach (var table in Tables)
             {
                 var tableData = new TableMetaData
@@ -89,10 +91,10 @@ namespace Console
                 {
                     config.Tables.Add(tableData);
                 }
+                // 打印进度
+                parser.ProgressPrint(++count, Tables.Count);
             }
-            // 解析数据库元数据
-            //var parser = new MetaDataParser(config);
-            //parser.Parse(data);
+           
             Print("解析完毕，生成中间配置文件...");
             // 生成中间配置文件
             var config_json_str = JsonConvert.SerializeObject(config);
@@ -194,6 +196,11 @@ namespace Console
             var connection = new OracleConnection(conn_str);
             connection.Open();
             return connection;
+        }
+
+        private static ConsoleProgressBar GetProgressBar()
+        {
+            return new ConsoleProgressBar(System.Console.CursorLeft, System.Console.CursorTop, 50, ProgressBarType.Character);
         }
     }
 }

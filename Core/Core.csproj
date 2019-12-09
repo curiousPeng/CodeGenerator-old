@@ -93,10 +93,10 @@
     <Compile Include="Common\DirectoryHelper.cs" />
     <Compile Include="Common\StringExtension.cs" />
     <Compile Include="Config\TypedConfiguration.cs" />
+    <Compile Include="Generator\MetaDataParser.cs" />
     <Compile Include="Generator\EnumGenerator.cs" />
     <Compile Include="Generator\ModelGenerator.cs" />
     <Compile Include="Generator\DALGenerator.cs" />
-    <Compile Include="Generator\MetaDataParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQLConfig.cs" />
     <Compile Include="SQLConfigHelper.cs" />
