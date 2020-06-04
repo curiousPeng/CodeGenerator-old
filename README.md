@@ -6,7 +6,7 @@
 + 例如字段备注为：代理类型 [1 个人收款 2 支付宝红包 3 支付宝WAP]
 + 生成如下：
 ```
-/// <summary>
+	/// <summary>
 	/// ChannelAgentInfo_Type_Enum枚举
 	/// 1 个人收款 2 支付宝红包 3 支付宝WAP
 	/// </summary>
