@@ -59,7 +59,7 @@ namespace Console
                     bool _isfail = false;
                     foreach (var item in result)
                     {
-                        item.Type = item.Type.Substring(0, item.Type.IndexOf("("));
+                        item.Type = item.Type.IndexOf("(") < 0 ? item.Type : item.Type.Substring(0, item.Type.IndexOf("("));
                         if (item.Type.Any(p => p.Equals("enum") || p.Equals("set")))
                         {
                             Print($"表{name}存在enum和set字段，暂无对应数据结构，跳过此表的生成！");
