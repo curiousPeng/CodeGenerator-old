@@ -204,7 +204,6 @@ namespace Generator.Core
                 case "tinyint": csharpType = "byte"; break;
                 case "varbinary": csharpType = "byte[]"; break;
                 case "varchar": csharpType = "string"; break;
-                case "xml": csharpType = "string"; break;
                 default: csharpType = "object"; break;
             }
             return csharpType;
