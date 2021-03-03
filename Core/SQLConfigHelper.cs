@@ -139,7 +139,7 @@ namespace Generator.Core
                 case "CHAR": csharpType = "string"; break;
                 case "CLOB": csharpType = "string"; break;
                 case "DATE": csharpType = "DateTime"; break;
-                case "datetime": csharpType = "DateTime"; break;
+                case "DATETIME": csharpType = "DateTime"; break;
                 case "LONG": csharpType = "string"; break;
                 case "LONG RAW": csharpType = "byte[]"; break;
                 case "INTEGER": csharpType = "decimal"; break;
